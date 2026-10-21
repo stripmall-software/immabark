@@ -32,6 +32,25 @@ immabark post --channel '#ops-alerts' --text ':warning: Payment API unavailable'
 Run it twice — instead of a second message, the first one gains
 "First seen / Last seen / 🔁 Count: 2".
 
+Deduplication is the core trick, not the whole kit:
+
+```bash
+# Keep dedup keys stable: variable detail goes in --blocks, not --text.
+# --thread-replies collects each occurrence as a reply instead of editing.
+immabark post --channel '#data-errors' --text ':x: Invalid record in import batch' \
+  --blocks 'Row 847: missing required field "email"' --thread-replies
+
+# Noisy-but-normal errors: suppress until they exceed a rate, then post
+# one message carrying the accumulated count.
+immabark post --channel '#ops-alerts' --text ':warning: Retry queue growing' \
+  --threshold 5/hr
+
+# Anything that can't exec Node can pipe the JSON (same body as the old
+# hosted webhook) through whatever can:
+echo '{"channel":"#ops-alerts","text":"backup finished","blocks":"42 GB in 12m"}' \
+  | immabark post -
+```
+
 ## How it works
 
 Alerts are deduplicated by hashing the channel + alert text. Each posted alert
