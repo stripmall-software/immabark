@@ -10,11 +10,13 @@ Usage:
   immabark post -             read a JSON payload {channel, text, blocks, options} from stdin
   immabark clear --channel '#ops'     delete this bot's alerts (and replies) in the channel
   immabark status [--channel '#ops']  count alerts in a channel, or show local pending counts
+  immabark doctor                     check the token and list channels the bot is in
   immabark help
 
 Environment:
-  SLACK_BOT_TOKEN      bot token (required unless --token); see slack-app-manifest.yaml
-  IMMABARK_STATE_DIR   local scratchpad directory (default: .immabark)`;
+  SLACK_BOT_TOKEN           bot token (required unless --token); see slack-app-manifest.yaml
+  IMMABARK_DEFAULT_CHANNEL  used when --channel is omitted
+  IMMABARK_STATE_DIR        local scratchpad directory (default: .immabark)`;
 
 function parseArgs(args) {
 	const flags = {};
@@ -51,7 +53,7 @@ export async function run(
 	if (!command || command === 'help') {
 		return { code: 0, out: USAGE, err: '' };
 	}
-	if (!['post', 'clear', 'status'].includes(command)) {
+	if (!['post', 'clear', 'status', 'doctor'].includes(command)) {
 		return { code: 1, out: '', err: `Unknown command: ${command}\n\n${USAGE}` };
 	}
 
@@ -69,6 +71,7 @@ export async function run(
 		};
 		if (flags['scan-limit']) factoryOpts.scanLimit = Number(flags['scan-limit']);
 		const alerts = createAlerts(factoryOpts);
+		const channelOrDefault = (explicit) => explicit || env.IMMABARK_DEFAULT_CHANNEL;
 
 		let result;
 		if (command === 'post') {
@@ -76,7 +79,7 @@ export async function run(
 			if (positional[0] === '-') {
 				const parsed = JSON.parse(stdinText ?? '');
 				payload = {
-					channel: parsed.channel,
+					channel: channelOrDefault(parsed.channel),
 					message: parsed.text,
 					blocks: parsed.blocks,
 					options: parsed.options ?? {}
@@ -86,21 +89,26 @@ export async function run(
 				if (flags.threadReplies) options.threadReplies = true;
 				if (flags.threshold) options.threshold = flags.threshold;
 				payload = {
-					channel: flags.channel,
+					channel: channelOrDefault(flags.channel),
 					message: flags.text,
 					blocks: parseBlocks(flags.blocks),
 					options
 				};
 			}
 			if (!payload.channel)
-				throw new Error('Missing --channel (or "channel" in the stdin payload)');
+				throw new Error(
+					'Missing --channel (or "channel" in the stdin payload, or IMMABARK_DEFAULT_CHANNEL)'
+				);
 			if (!payload.message) throw new Error('Missing --text (or "text" in the stdin payload)');
 			result = await alerts.postAlert(payload);
 		} else if (command === 'clear') {
-			if (!flags.channel) throw new Error('Missing --channel');
-			result = await alerts.clearChannel(flags.channel);
+			const channel = channelOrDefault(flags.channel);
+			if (!channel) throw new Error('Missing --channel (or IMMABARK_DEFAULT_CHANNEL)');
+			result = await alerts.clearChannel(channel);
+		} else if (command === 'doctor') {
+			result = await alerts.doctor();
 		} else {
-			result = await alerts.getStatus(flags.channel);
+			result = await alerts.getStatus(channelOrDefault(flags.channel));
 		}
 
 		return { code: 0, out: JSON.stringify(result), err: '' };

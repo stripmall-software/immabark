@@ -16,9 +16,12 @@ It's a local CLI — no server or webhook involved.
   Treat it as a secret: never print it or send it anywhere but Slack. If it's
   missing, ask the user; first-time setup is a one-pager — creating a Slack
   app from the repo's `slack-app-manifest.yaml` (see the README).
-- The `immabark` command (or `node bin/immabark.mjs` from a checkout of
-  github.com/stripmall-software/immabark).
+- Node ≥ 20. Run the CLI as `npx -y immabark` (shown as `immabark` below);
+  nothing needs installing.
 - The bot must be in the target channel: `/invite @immabark` there.
+- If `IMMABARK_DEFAULT_CHANNEL` is set, you may omit `--channel`.
+- Unsure about the setup? `immabark doctor` checks the token and lists the
+  channels the bot is in.
 
 ## Send an alert
 

@@ -24,6 +24,10 @@ function makeStub(result = { ok: true, ts: '1.000000', channel: 'C0AAA' }) {
 			getStatus: async (channel) => {
 				recorded.calls.push(['getStatus', channel]);
 				return channel ? { alertCount: 3 } : { pending: 0 };
+			},
+			doctor: async () => {
+				recorded.calls.push(['doctor']);
+				return { ok: true, team: 'Test Workspace', channels: ['#ops'] };
 			}
 		};
 	};
@@ -155,6 +159,39 @@ describe('immabark CLI', () => {
 			'getStatus',
 			'getStatus'
 		]);
+	});
+
+	it('falls back to IMMABARK_DEFAULT_CHANNEL when --channel is omitted', async () => {
+		const { recorded, createAlerts } = makeStub();
+		const envWithDefault = { ...env, IMMABARK_DEFAULT_CHANNEL: '#ops-default' };
+
+		const post = await run(['post', '--text', 'disk full'], { env: envWithDefault, createAlerts });
+		expect(post.code).toBe(0);
+		expect(recorded.calls[0][1].channel).toBe('#ops-default');
+
+		const clear = await run(['clear'], { env: envWithDefault, createAlerts });
+		expect(clear.code).toBe(0);
+		expect(recorded.calls[1]).toEqual(['clearChannel', '#ops-default']);
+
+		// an explicit flag still wins
+		await run(['post', '--channel', '#explicit', '--text', 'x'], {
+			env: envWithDefault,
+			createAlerts
+		});
+		expect(recorded.calls[2][1].channel).toBe('#explicit');
+	});
+
+	it('doctor maps to the engine and prints the report', async () => {
+		const { recorded, createAlerts } = makeStub();
+		const result = await run(['doctor'], { env, createAlerts });
+
+		expect(result.code).toBe(0);
+		expect(JSON.parse(result.out)).toEqual({
+			ok: true,
+			team: 'Test Workspace',
+			channels: ['#ops']
+		});
+		expect(recorded.calls[0]).toEqual(['doctor']);
 	});
 
 	it('help prints usage with code 0; unknown commands get usage with code 1', async () => {

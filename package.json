@@ -1,10 +1,28 @@
 {
 	"name": "immabark",
-	"private": true,
-	"version": "2.0.0",
+	"version": "2.1.0",
+	"description": "De-spammed Slack alerts: repeated alerts edit the original message in place with a count. Zero-dependency CLI — no server, no database, no webhook.",
+	"keywords": [
+		"slack",
+		"alerts",
+		"notifications",
+		"deduplication",
+		"cli",
+		"agent",
+		"skill"
+	],
 	"license": "MIT",
 	"repository": "github:stripmall-software/immabark",
 	"type": "module",
+	"files": [
+		"bin/immabark.mjs",
+		"lib/slack-alerts.js",
+		"skills/",
+		"slack-app-manifest.yaml"
+	],
+	"exports": {
+		".": "./lib/slack-alerts.js"
+	},
 	"engines": {
 		"node": ">=20"
 	},

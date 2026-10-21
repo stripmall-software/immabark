@@ -22,12 +22,15 @@ Node ≥ 20 runs — your laptop, a cron box, CI, an agent workspace, a git repo
 2. **Install to Workspace** and copy the Bot User OAuth Token:
    `export SLACK_BOT_TOKEN=xoxb-...`
 3. Invite the bot where you want alerts: `/invite @immabark` in the channel.
-4. Post an alert (from a clone: `node bin/immabark.mjs`, or `pnpm link --global`
-   once to get `immabark` on your PATH):
+4. Post an alert — no install needed:
 
 ```bash
-immabark post --channel '#ops-alerts' --text ':warning: Payment API unavailable'
+npx -y immabark post --channel '#ops-alerts' --text ':warning: Payment API unavailable'
 ```
+
+(`npm i -g immabark` if you'd rather have `immabark` on your PATH; examples
+below assume you do. `npx -y immabark doctor` checks your token and lists the
+channels the bot is in.)
 
 Run it twice — instead of a second message, the first one gains
 "First seen / Last seen / 🔁 Count: 2".
@@ -82,7 +85,11 @@ immabark post --channel '#ops' --text 'Import failed'
 immabark post -                read {channel, text, blocks, options} JSON from stdin
 immabark clear --channel '#ops'    delete this bot's alerts + replies there
 immabark status [--channel '#ops'] count alerts, or show local pending counts
+immabark doctor                    check the token; list channels the bot is in
 ```
+
+`IMMABARK_DEFAULT_CHANNEL` is used whenever `--channel` is omitted — set it
+once in a workspace (or an agent's environment) and alerts need only text.
 
 Output is one JSON object on stdout; errors are `{"ok": false, "error": ...}`
 on stderr with a non-zero exit code.
@@ -98,11 +105,11 @@ swap `curl $WEBHOOK_URL -d @-` for `immabark post -`.
 
 ## Using the library
 
-The whole engine is one zero-dependency file. Copy `lib/slack-alerts.js` into
-your project (it's deliberately not on npm):
+The whole engine is one zero-dependency file, importable from the package —
+or just copy `lib/slack-alerts.js` into your project:
 
 ```js
-import { createSlackAlerts } from './slack-alerts.js';
+import { createSlackAlerts } from 'immabark';
 
 const alerts = createSlackAlerts({ token: process.env.SLACK_BOT_TOKEN });
 await alerts.postAlert({
@@ -122,8 +129,10 @@ resolveChannel, hashMessage, parseThreshold }`.
 [`skills/immabark/SKILL.md`](skills/immabark/SKILL.md) teaches an AI agent
 (Claude Code, openclaw, or anything that reads SKILL.md files) to send
 deduplicated alerts. Copy the directory into `~/.claude/skills/` or your
-project's `.claude/skills/`, and make sure `SLACK_BOT_TOKEN` is set in the
-agent's environment.
+project's `.claude/skills/` (it also ships inside the npm package under
+`skills/`), and set `SLACK_BOT_TOKEN` — plus, ideally,
+`IMMABARK_DEFAULT_CHANNEL` — in the agent's environment. The skill runs the
+CLI via `npx -y immabark`, so nothing needs installing.
 
 ## Known limits
 
