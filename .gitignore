@@ -1,0 +1,15 @@
+node_modules
+
+# immabark local scratchpad (disposable state)
+.immabark/
+
+# superpowers plan workspaces
+.superpowers/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# retired v1 deployment config (local only)
+wrangler.toml
+.dev.vars

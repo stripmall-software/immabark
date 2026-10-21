@@ -1,0 +1,24 @@
+# Create your Slack app from this manifest: https://api.slack.com/apps
+# -> "Create New App" -> "From a manifest". Then: Install to Workspace,
+# copy the Bot User OAuth Token (xoxb-...), and `export SLACK_BOT_TOKEN=...`.
+#
+# Private channels: add `groups:history` to the bot scopes AND pass the
+# channel ID (C...) as --channel — name lookup only covers public channels.
+display_information:
+  name: immabark
+  description: De-spammed Slack alerts - repeated alerts edit in place with a count
+  background_color: '#1a1a2e'
+features:
+  bot_user:
+    display_name: immabark
+    always_online: false
+oauth_config:
+  scopes:
+    bot:
+      - chat:write
+      - channels:history
+      - channels:read
+settings:
+  org_deploy_enabled: false
+  socket_mode_enabled: false
+  token_rotation_enabled: false

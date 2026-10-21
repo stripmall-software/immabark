@@ -1,0 +1,24 @@
+{
+	"name": "immabark",
+	"private": true,
+	"version": "2.0.0",
+	"license": "MIT",
+	"repository": "github:stripmall-software/immabark",
+	"type": "module",
+	"engines": {
+		"node": ">=20"
+	},
+	"bin": {
+		"immabark": "bin/immabark.mjs"
+	},
+	"scripts": {
+		"test": "vitest run",
+		"test:unit": "vitest",
+		"lint": "prettier --check .",
+		"format": "prettier --write ."
+	},
+	"devDependencies": {
+		"prettier": "^3.9.10",
+		"vitest": "^3.2.3"
+	}
+}
